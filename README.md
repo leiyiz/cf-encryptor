@@ -1,4 +1,4 @@
 # sample-data-repo
-Arka Bhattacharya
-Jenny Liang
-Leiyi Zhang
+Arka Bhattacharya  
+Jenny Liang  
+Leiyi Zhang  
