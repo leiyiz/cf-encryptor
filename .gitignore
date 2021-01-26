@@ -1,2 +1,12 @@
 ### Pycharm ###
 .idea/
+
+### Byte code ###
+__pycache__/
+
+
+### macOS crap ###
+.DS_Store
+
+
+token.json

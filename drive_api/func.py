@@ -3,6 +3,8 @@ from pydrive2.drive import GoogleDrive
 from .auth import drive_login
 
 
+# TODO: file listing and drive navigation so that we can specify where to upload & download from
+
 def file_upload(file_path: str):
     gauth = drive_login()
     drive = GoogleDrive(gauth)
