@@ -29,6 +29,7 @@ def drive_logout() -> None:
     token = os.path.join(DIR_PATH, cred_file)
     gauth.LoadCredentials()
     if not gauth.access_token_expired:
+        print('logging out from the gDrive...')
         requests.post(url=REVOKE, params={'token': gauth.credentials.access_token},
                       headers={'Content-type': 'application/x-www-form-urlencoded'})
     os.remove(token)
