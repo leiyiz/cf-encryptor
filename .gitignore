@@ -4,9 +4,10 @@
 ### Byte code ###
 __pycache__/
 
-
 ### macOS crap ###
 .DS_Store
 
+### Virtual environment folders ###
+venv
 
 token.json
