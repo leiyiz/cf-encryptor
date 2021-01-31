@@ -1,20 +1,35 @@
+from crypto import *
+import os
+import hashlib
+
+# Data structure for an entry in the vault
+class VaultEntry:
+    def __init__(self, entryname="", key="", salt=""):
+        self.name = entryname
+        self.key = key
+        self.salt = salt
+    def get_key(self):
+        return self.key
+    def get_name(self):
+        return self.name
+    def generate_key(self, password):
+        # When generating key during init of a key, automatically hash
+        self.salt = os.urandom(16)
+        self.key = generate_password_key(password, self.salt)
+    def hash_entry(self):
+        entry_hash = hashlib.sha256()
+        entry_hash.update("{},{},{}".format(self.name, self.key, self.salt))
+        return entry_hash.digest()
+    
 # Primary Vault Class 
-
-'''
-Metadata entries
-(look at all entries) Given password to vault, returns list of files that are protected locally by that password
-get_data_list_by_group(password)
-(look at one entry) Given password to vault and the name of a file, returns remote file name and the key to that file
-get_data(password, entry_name)  
-(make an entry) Given a password, generate and return a random name and a secure random cryptographic key
-create_data(password, entry_name)
-(delete one entry) Given password to vault and the name of a file, delete the relevant entry
-delete_data(password, entry_name)
-
-'''
 class Vault:
     def __init__(self):
-    
+        # Dictionary with hash of password: entries
+        self.entries = {}
+        self.on_init()
+
+    def __del__(self):
+        self.save_data()
     ''' 
     Gets a list of all data entries accessible by a 
     user passed password in the vault
@@ -61,7 +76,7 @@ class Vault:
     True if entry with name entry_name already exists under password
     False if error occurs in creation
     '''
-    def create_data(password, entry_name):
+    def create_data(self, password, entry_name):
         return None
     '''
     Deletes a data entry in the vault with name entry_name and 
@@ -75,5 +90,22 @@ class Vault:
     True if an entry with entry_name under that password is succesfully deleted.
     False otherwise.
     '''
-    def delete_data(password, entry_name):
+    def delete_data(self, password, entry_name):
         return None
+    
+    ''' Called when program exits.
+        Performs the following functionalities:
+            - Hash all entries
+            - Save new password hash to entry dictionary to local file
+    '''
+    def save_data(self):
+
+    ''' Loaded when vault is initiatlized
+        Performs the following functionalities:
+            - Load password hash to entry dictionary from local file
+            - Unhash all entries
+            - Load internal data structures
+    ''' 
+    def on_init(self):
+
+    
