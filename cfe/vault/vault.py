@@ -14,7 +14,8 @@ class VaultEntry:
         return self.name
     def generate_key(self, password):
         # When generating key during init of a key, automatically hash
-        self.salt = os.urandom(16)
+        if (self.salt == ""):
+            self.salt = os.urandom(16)
         self.key = generate_password_key(password, self.salt)
     def hash_entry(self):
         entry_hash = hashlib.sha256()
@@ -42,8 +43,12 @@ class Vault:
     If password does not allow access to any vault entries, throws an AttributeError.
     '''
     def get_data_list_by_group(self, password):
-        return None
-
+        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        if pass_hash in self.entries:
+            return self.entries[pass_hash]
+        else:
+            return AttributeError()
+    
     ''' 
     Gets data for a particular entry with the name 
     entry_name and user passed password
@@ -56,11 +61,18 @@ class Vault:
     Returns: 
     data entry with entry_name name and accessible by password. 
     If data entry with entry_name name does not exist in vault, returns 
-    an empty string.
+    Null.
     If password does not allow access to any vault entries, throws an AttributeError.
     '''
     def get_data(self, password, entry_name):
-        return None
+        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        if pass_hash in self.entries:
+            for entry in self.entries[pass_hash]:
+                if entry.get_name == entry_name:
+                    return entry
+            return None
+        else:
+            return AttributeError()
 
     '''
     Creates a new data entry with the name entry_name and 
@@ -77,7 +89,23 @@ class Vault:
     False if error occurs in creation
     '''
     def create_data(self, password, entry_name):
-        return None
+        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        if pass_hash not in self.entries.keys():
+            new_entry = VaultEntry(entry_name)
+            new_entry.generate_key(password)
+            self.entries[pass_hash] = new_entry
+        else:
+            exists = False
+            for entry in self.entries[pass_hash]:
+                if entry.get_name() == entry_name:
+                    exists = True
+                    break
+            if not exists:
+                new_entry = VaultEntry(entry_name)
+                new_entry.generate_key(password)
+                self.entries[pass_hash] = new_entry
+        return True
+    
     '''
     Deletes a data entry in the vault with name entry_name and 
     user passed password. 
@@ -91,8 +119,19 @@ class Vault:
     False otherwise.
     '''
     def delete_data(self, password, entry_name):
-        return None
-    
+        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        index = 0
+        if pass_hash in self.entries.keys():
+            for entry in self.entries[pass_hash]:
+                if entry.get_name() == entry_name:
+                    break
+                else:
+                    index += 1
+            if index < len(self.entries[pass_hash]):
+                self.entries[pass_hash].pop(index)
+                return True
+        return False
+        
     ''' Called when program exits.
         Performs the following functionalities:
             - Hash all entries
