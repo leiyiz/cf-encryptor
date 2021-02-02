@@ -6,7 +6,7 @@ import hashlib
 class VaultEntry:
     def __init__(self, entryname="", key="", salt=""):
         self.name = entryname
-        self.key = key
+        self.entry_key = key
         self.salt = salt
     def get_key(self):
         return self.key
@@ -17,20 +17,20 @@ class VaultEntry:
         if (self.salt == ""):
             self.salt = os.urandom(16)
         self.key = generate_password_key(password, self.salt)
-    def hash_entry(self):
-        entry_hash = hashlib.sha256()
-        entry_hash.update("{},{},{}".format(self.name, self.key, self.salt))
-        return entry_hash.digest()
+    def encrypt_entry(self, key):
+        entry = ("{},{},{}".format(self.name, self.entry_key, self.salt))
+        return encrypt(key, entry)
+    def decrypt_and_store_entry(self, key, entry_cipher):
+        self.name, self.entry_key, self.salt = decrypt(key, entry_cipher).split(",")
     
 # Primary Vault Class 
 class Vault:
-    def __init__(self):
+    def __init__(self, entry_keys):
         # Dictionary with hash of password: entries
         self.entries = {}
-        self.on_init()
+        self.entry_cipher_keys = entry_keys
+        self.on_init(self.entry_cipher_keys)
 
-    def __del__(self):
-        self.save_data()
     ''' 
     Gets a list of all data entries accessible by a 
     user passed password in the vault
@@ -43,7 +43,9 @@ class Vault:
     If password does not allow access to any vault entries, throws an AttributeError.
     '''
     def get_data_list_by_group(self, password):
-        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        hash_fn = hashlib.sha256()
+        hash_fn.update("{}".format(password).encode())
+        pass_hash = hash_fn.digest()
         if pass_hash in self.entries:
             return self.entries[pass_hash]
         else:
@@ -65,10 +67,12 @@ class Vault:
     If password does not allow access to any vault entries, throws an AttributeError.
     '''
     def get_data(self, password, entry_name):
-        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        hash_fn = hashlib.sha256()
+        hash_fn.update("{}".format(password).encode())
+        pass_hash = hash_fn.digest()
         if pass_hash in self.entries:
             for entry in self.entries[pass_hash]:
-                if entry.get_name == entry_name:
+                if entry.get_name() == entry_name:
                     return entry
             return None
         else:
@@ -89,11 +93,14 @@ class Vault:
     False if error occurs in creation
     '''
     def create_data(self, password, entry_name):
-        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        hash_fn = hashlib.sha256()
+        hash_fn.update("{}".format(password).encode())
+        pass_hash = hash_fn.digest()
         if pass_hash not in self.entries.keys():
             new_entry = VaultEntry(entry_name)
             new_entry.generate_key(password)
-            self.entries[pass_hash] = new_entry
+            self.entries[pass_hash] = []
+            self.entries[pass_hash].append(new_entry)
         else:
             exists = False
             for entry in self.entries[pass_hash]:
@@ -103,7 +110,7 @@ class Vault:
             if not exists:
                 new_entry = VaultEntry(entry_name)
                 new_entry.generate_key(password)
-                self.entries[pass_hash] = new_entry
+                self.entries[pass_hash].append(new_entry)
         return True
     
     '''
@@ -119,7 +126,9 @@ class Vault:
     False otherwise.
     '''
     def delete_data(self, password, entry_name):
-        pass_hash = hashlib.sha256().update("{}".format(password)).digest()
+        hash_fn = hashlib.sha256()
+        hash_fn.update("{}".format(password).encode())
+        pass_hash = hash_fn.digest()
         index = 0
         if pass_hash in self.entries.keys():
             for entry in self.entries[pass_hash]:
@@ -134,17 +143,46 @@ class Vault:
         
     ''' Called when program exits.
         Performs the following functionalities:
-            - Hash all entries
+            - Encrypt entries
             - Save new password hash to entry dictionary to local file
     '''
-    def save_data(self):
-
+    def on_exit(self):
+        all_entries = []
+        i = 0
+        for p in self.entries.keys():
+            for entry in self.entries[p]:
+                entry_cipher = entry.encrypt_entry(self.entry_cipher_keys[i])
+                all_entries.append("{}:{}".format(p, entry_cipher))
+                i += 1
+        with open("cfe_vault.dat", "w+") as f:
+            for entry in all_entries:
+                f.write(entry + "\n")
+        
     ''' Loaded when vault is initiatlized
         Performs the following functionalities:
             - Load password hash to entry dictionary from local file
             - Unhash all entries
             - Load internal data structures
     ''' 
-    def on_init(self):
+    def on_init(self, keys):
+        all_entries = []
+        with open("cfe_vault.dat", "r+") as f:
+            all_entries = f.readlines()
+        for i in range(len(all_entries)):
+            pass_hash, entry_cipher = all_entries[i].split(":")
+            entry = VaultEntry()
+            entry.decrypt_and_store_entry(keys[i], entry_cipher)
+            if pass_hash not in self.entries.keys():
+                self.entries[pass_hash] = []
+            self.entries[pass_hash].append(entry)
+        
 
+if __name__ == "__main__":
+    print("Toy Example")
+    entry_keys = []
+    entry_keys.append(generate_random_key())
+    sample_vault = Vault(entry_keys)
+    sample_vault.create_data("password123", "arkasfile.txt")
+    sample_entry = sample_vault.get_data("password123", "arkasfile.txt")
+    print(sample_entry.get_key())
     

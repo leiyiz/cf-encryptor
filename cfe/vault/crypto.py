@@ -63,25 +63,25 @@ def decrypt(key, ciphertext):
     return message
 
 
+if __name__ == "__main__":
+    # (1) Encrypt a file (random cryptographic key)
+    file_key = generate_random_key()
+    enc_file = encrypt(file_key, "contents of the file")
+    print("Encrypted File:", enc_file)
 
-# (1) Encrypt a file (random cryptographic key)
-file_key = generate_random_key()
-enc_file = encrypt(file_key, "contents of the file")
-print("Encrypted File:", enc_file)
+    # (2) Encrypt a row entry (password-based key)
+    salt = os.urandom(16)
+    pb_key = generate_password_key("password123", salt)
+    enc_entry = encrypt(pb_key, "entry: " + file_key.decode())
+    print("Encrypted Entry:", enc_entry)
+    print()
 
-# (2) Encrypt a row entry (password-based key)
-salt = os.urandom(16)
-pb_key = generate_password_key("password123", salt)
-enc_entry = encrypt(pb_key, "entry: " + file_key.decode())
-print("Encrypted Entry:", enc_entry)
-print()
+    # (3) Decrypt a row entry (password-based key)
+    pb_key = generate_password_key("password123", salt) # Note that salt can be stored in plaintext
+    dec_entry = decrypt(pb_key, enc_entry)
+    print("Decrypted Entry:", dec_entry)
 
-# (3) Decrypt a row entry (password-based key)
-pb_key = generate_password_key("password123", salt) # Note that salt can be stored in plaintext
-dec_entry = decrypt(pb_key, enc_entry)
-print("Decrypted Entry:", dec_entry)
-
-# (4) Decrypt a file (random cryptographic key)
-file_key = dec_entry[7:] # get rid of text
-dec_file = decrypt(file_key, enc_file)
-print("Decrypted File:", dec_file)
+    # (4) Decrypt a file (random cryptographic key)
+    file_key = dec_entry[7:] # get rid of text
+    dec_file = decrypt(file_key, enc_file)
+    print("Decrypted File:", dec_file)
