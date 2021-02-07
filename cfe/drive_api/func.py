@@ -1,8 +1,6 @@
 from typing import List, Tuple
-
 from pydrive2.drive import GoogleDrive
-
-from auth import drive_login
+from .auth import drive_login
 
 FOLDER_TYPE = 'application/vnd.google-apps.folder'
 MIME = 'mimeType'
@@ -24,12 +22,12 @@ def file_list(folder_path: List[str]) -> list:
     return _list_file(folder_path, drive)[1]
 
 
-def file_replace(file_name: str, file_path: str, folder_path: List[str]) -> None:
+def file_replace(file_name: str, file_content: str, folder_path: List[str]) -> None:
     """
     upload file from local to gDrive, if a file with same "title" already exists, replace that file.
 
     :param file_name: filename recorded on drive e.g. resume.txt
-    :param file_path: local absolute path of file needs to be uploaded
+    :param file_content: string content of file needs to be uploaded
     :param folder_path: a list of strings representing the path
                         from root (exclusive) to the target folder (inclusive) on the drive
     :return: fid of uploaded file
@@ -42,14 +40,14 @@ def file_replace(file_name: str, file_path: str, folder_path: List[str]) -> None
         if file['title'] == file_name:
             file.Trash()
 
-    _upload(file_name, file_path, drive, folder_id)
+    _upload(file_name, file_content, drive, folder_id)
 
 
-def file_upload(file_name: str, file_path: str, folder_path: List[str]) -> None:
+def file_upload(file_name: str, file_content: str, folder_path: List[str]) -> None:
     drive = _drive_gen()
 
     folder_id = _create_or_find_folder(folder_path, drive)
-    _upload(file_name, file_path, drive, folder_id)
+    _upload(file_name, file_content, drive, folder_id)
 
 
 def file_download(file_name: str, folder_path: List[str], target_path: str):
@@ -59,6 +57,7 @@ def file_download(file_name: str, folder_path: List[str], target_path: str):
     :param folder_path: a list of strings representing the path from root (exclusive)
                         to a gDrive folder containingsource file (inclusive) on the drive
     :param target_path: local path to a file to which the file be downloaded
+    :return: content of downloaded file as string
     """
     drive = _drive_gen()
 
@@ -72,7 +71,7 @@ def file_download(file_name: str, folder_path: List[str], target_path: str):
         raise FileNotFoundError(f"file {file_name} is not found under /{'/'.join(folder_path)}")
 
     file = drive.CreateFile({'id': fid})
-    file.GetContentFile(target_path)
+    return file.GetContentString()
 
 
 def create_folder(folder_path: List[str]) -> str:
@@ -116,9 +115,9 @@ def _drive_gen() -> GoogleDrive:
     return GoogleDrive(drive_login())
 
 
-def _upload(file_name: str, file_path: str, drive: GoogleDrive, parent_id: str) -> None:
+def _upload(file_name: str, file_content: str, drive: GoogleDrive, parent_id: str) -> None:
     file = drive.CreateFile()
-    file.SetContentFile(file_path)
+    file.SetContentString(file_content)
     file['title'] = file_name
     file['parents'] = [{'id': parent_id}]
     file.Upload()
