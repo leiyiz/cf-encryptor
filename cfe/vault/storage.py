@@ -48,8 +48,9 @@ class Vault:
     def __init__(self, password):
         # Dictionary with hash of password: entries
         self.entries = []
+        self.other_entries = []
         self.password =  password
-        self.on_init()
+        self._on_init()
 
     ''' 
     Gets a list of all data entries accessible by a 
@@ -101,7 +102,7 @@ class Vault:
                 return entry
         new_entry = VaultEntry(entry_name)
         self.entries.append(new_entry)
-        self.on_save()
+        self._on_save()
         return new_entry
 
     
@@ -134,10 +135,13 @@ class Vault:
             - Encrypt entries
             - Save new password hash to entry dictionary to local file
     '''
-    def on_save(self):
+    def _on_save(self):
         with open("vault/cfe_vault.dat", "wb+") as f:
             for entry in self.entries:
                 entry_ct = entry.encrypt_entry(self.password)
+                f.write(entry_ct)
+                f.write(str.encode('\n'))
+            for entry_ct in self.other_entries:
                 f.write(entry_ct)
                 f.write(str.encode('\n'))
             
@@ -148,15 +152,17 @@ class Vault:
             - Unhash all entries
             - Load internal data structures
     ''' 
-    def on_init(self):
+    def _on_init(self):
         all_entries = []
         with open("vault/cfe_vault.dat", "rb") as f:
             all_entries = f.readlines()
-        if len(all_entries) != 0:    
-            for entry_ct in all_entries:
-                potential_entry = VaultEntry()
-                if potential_entry.decrypt_and_store_entry(self.password, entry_ct):
-                    self.entries.append(potential_entry)
+        
+        for entry_ct in all_entries:
+            potential_entry = VaultEntry()
+            if potential_entry.decrypt_and_store_entry(self.password, entry_ct):
+                self.entries.append(potential_entry)
+            else:
+                self.other_entries.append(entry_ct)
         
 
         

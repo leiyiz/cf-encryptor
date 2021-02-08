@@ -1,16 +1,15 @@
-import os
 import uuid
-import click
-import logging
+import errno, os, sys, cmd
+import click, logging
 import drive_api
 import vault.crypto as crypto
 import vault.storage as vault
 from getpass import getpass
+from paths import is_path_exists_or_creatable
 
 @click.group()
 def cli():
     pass
-
 
 @click.command()
 def init():
@@ -24,7 +23,7 @@ def init():
 @click.command()
 @click.argument('add_type')
 @click.argument('name')
-def add(add_type, name):
+def add (add_type, name):
     # Check if they are trying to add a provider
     # TODO: add login by name
     if add_type == "provider":
@@ -41,24 +40,32 @@ def add(add_type, name):
 @click.argument('dst')
 def upload(src, dst):
     # TODO: Validate if the provider exists
-    
+    if not is_path_exists_or_creatable(src):
+        logging.error(f"invalid path: {src}")
+        return
+
     # Read the contents of the file
     content = None
     try:
-        with open(src) as f:
+        with open(src, 'rb') as f:
             content = f.read()
-    except:
-        logger.error(f"Error: Could not find file {src}")
+    except Exception as e:
+        print(e)
+        logging.error(f"Error: Could not find file {src}")
         return
 
     if content is None:
-        logger.error(f"Error: Could not find file {src}")
+        logging.error(f"Error: Could not find file {src}")
         return
     
     # Create a vault entrys
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
 
+    if v.get_data(f"{dst} ") is not None:
+        logging.error(f"Already an entry for {dst}")
+        return
+    
     guid = str(uuid.uuid4())
     entry = v.create_data(f"{dst} {guid}")
 
@@ -74,6 +81,11 @@ def upload(src, dst):
 @click.argument('src')
 @click.argument('dst')
 def download(src, dst):
+    # Validate file paths
+    if not is_path_exists_or_creatable(dst):
+        logging.error(f"invalid path: {dst}")
+        return
+
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
@@ -102,16 +114,30 @@ def download(src, dst):
 
     # Decrypt the file and write to dst
     plaintext = crypto.decrypt(key, cipher)
-    with open(dst, "w") as f:
-        f.write(plaintext.decode())
+    with open(dst, "wb") as f:
+        f.write(plaintext)
 
     logging.info(f"Successfully downloaded {dst}")
 
+@click.command()
+def list():
+    # Prompt the user for a password
+    password = getpass(prompt="Enter password for encryption:")
+    v = vault.Vault(password)
+
+    tmp = []
+    for entry in v.get_data_list():
+        data = entry.get_name().split()
+        tmp.append(data[0].strip())
+    
+    tmp = sorted(tmp)
+    cmd.Cmd().columnize(tmp, displaywidth=80)
 
 cli.add_command(init)
 cli.add_command(add)
 cli.add_command(download)
 cli.add_command(upload)
+cli.add_command(list)
 
 if __name__ == '__main__':
     cli()

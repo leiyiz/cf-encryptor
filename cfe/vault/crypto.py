@@ -45,8 +45,12 @@ def encrypt(key, message):
     # and decryption. It uses the standard PKCS7 padding
 
     f = Fernet(key)
-    message_bytes = str.encode(message)
-    ciphertext = f.encrypt(message_bytes)
+    ciphertext = None
+    if type(message) == bytes:
+        ciphertext = f.encrypt(message)
+    else:
+        message_bytes = str.encode(message)
+        ciphertext = f.encrypt(message_bytes)
     return ciphertext
 
 
