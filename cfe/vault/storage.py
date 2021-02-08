@@ -1,6 +1,7 @@
 from vault.crypto import *
-import os
+import os, sys
 import hashlib
+import logging
 
 # Data structure for an entry in the vault
 class VaultEntry:
@@ -154,8 +155,12 @@ class Vault:
     ''' 
     def _on_init(self):
         all_entries = []
-        with open("vault/cfe_vault.dat", "rb") as f:
-            all_entries = f.readlines()
+        try:
+            with open("vault/cfe_vault.dat", "rb") as f:
+                all_entries = f.readlines()
+        except:
+            logging.error(f"Couldn't initialize the CFE vault. Did you run 'cfe init'?")
+            sys.exit()
         
         for entry_ct in all_entries:
             potential_entry = VaultEntry()
