@@ -1,5 +1,4 @@
 cryptography
-getpass
 click == 7.1.2
 requests~=2.21.0
 pydrive2~=1.7.0
