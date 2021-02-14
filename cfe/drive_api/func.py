@@ -6,19 +6,15 @@ FOLDER_TYPE = 'application/vnd.google-apps.folder'
 MIME = 'mimeType'
 
 
-def init_folder(folder_name: str) -> str:
-    return create_folder([folder_name])
-
-
 def file_list(folder_path: List[str]) -> list:
     """
     list all files under given folder
 
-    :param folder_path: a list of strings representing the path
-                        from root (exclusive) to a folder (inclusive) on the drive
+    :param folder_path: a list of strings representing the path from root to a folder (inclusive) on the drive.
+                        The first element of the list has to be the name of the drive vault's trying to access.
     :return: list of GoogleDriveFile objects from which metadata like f['title'] and f['id'] can be read
     """
-    drive = _drive_gen()
+    drive = _drive_gen(folder_path.pop(0))
     return _list_file(folder_path, drive)[1]
 
 
@@ -29,10 +25,11 @@ def file_replace(file_name: str, file_content: str, folder_path: List[str]) -> N
     :param file_name: filename recorded on drive e.g. resume.txt
     :param file_content: string content of file needs to be uploaded
     :param folder_path: a list of strings representing the path
-                        from root (exclusive) to the target folder (inclusive) on the drive
+                        from root (exclusive) to the target folder (inclusive) on the drive.
+                        The first element of the list has to be the name of the drive vault's trying to access.
     :return: fid of uploaded file
     """
-    drive = _drive_gen()
+    drive = _drive_gen(folder_path.pop(0))
 
     folder_id, files = _list_file(folder_path, drive)
 
@@ -44,7 +41,7 @@ def file_replace(file_name: str, file_content: str, folder_path: List[str]) -> N
 
 
 def file_upload(file_name: str, file_content: str, folder_path: List[str]) -> None:
-    drive = _drive_gen()
+    drive = _drive_gen(folder_path.pop(0))
 
     folder_id = _create_or_find_folder(folder_path, drive)
     _upload(file_name, file_content, drive, folder_id)
@@ -56,10 +53,11 @@ def file_download(file_name: str, folder_path: List[str], target_path: str):
     :param file_name: name of the file to be downloaded
     :param folder_path: a list of strings representing the path from root (exclusive)
                         to a gDrive folder containingsource file (inclusive) on the drive
+                        The first element of the list has to be the name of the drive vault's trying to access.
     :param target_path: local path to a file to which the file be downloaded
     :return: content of downloaded file as string
     """
-    drive = _drive_gen()
+    drive = _drive_gen(folder_path.pop(0))
 
     fid = None
     for file in _list_file(folder_path, drive)[1]:
@@ -79,9 +77,10 @@ def create_folder(folder_path: List[str]) -> str:
     create a folder if it does not exist yet, otherwise just returns the fid
     :param folder_path: a list of strings representing the path
                         from root (exclusive) to the folder (inclusive) to be created
+                        The first element of the list has to be the name of the drive vault's trying to access.
     :return: fid of the folder matching the folder_path
     """
-    drive = _drive_gen()
+    drive = _drive_gen(folder_path.pop(0))
     return _create_or_find_folder(folder_path, drive)
 
 def file_delete(file_name:str, folder_path: List[str]):
@@ -129,8 +128,8 @@ def _create_or_find_folder(folder_path: List[str], drive: GoogleDrive) -> str:
     return parent
 
 
-def _drive_gen() -> GoogleDrive:
-    return GoogleDrive(drive_login())
+def _drive_gen(drive_name: str) -> GoogleDrive:
+    return GoogleDrive(drive_login(drive_name))
 
 
 def _upload(file_name: str, file_content: str, drive: GoogleDrive, parent_id: str) -> None:
