@@ -27,7 +27,7 @@ def generate_password_key(password, salt):
     kdf = Scrypt(
         salt=salt,  # Random salt to prevent brute-force
         length=32,  # Output length of bytes
-        n=2**20,    # Computational cost, reccomended value in https://www.tarsnap.com/scrypt/scrypt.pdf
+        n=2**14,    # Computational cost, reccomended value in https://www.tarsnap.com/scrypt/scrypt.pdf
         r=8,        # Block size
         p=1,        # Parallelization parameter
     )
@@ -45,8 +45,12 @@ def encrypt(key, message):
     # and decryption. It uses the standard PKCS7 padding
 
     f = Fernet(key)
-    message_bytes = str.encode(message)
-    ciphertext = f.encrypt(message_bytes)
+    ciphertext = None
+    if type(message) == bytes:
+        ciphertext = f.encrypt(message)
+    else:
+        message_bytes = str.encode(message)
+        ciphertext = f.encrypt(message_bytes)
     return ciphertext
 
 
@@ -54,6 +58,9 @@ def decrypt(key, ciphertext):
     """
     Returns an AES-CBC decryption of the ciphertext under the key
     """
+
+    if type(ciphertext) is str:
+        ciphertext = str.encode(ciphertext)
 
     # Fernet uses AES in CBC mode with a 128-bit key for encryption
     # and decryption. It uses the standard PKCS7 padding
