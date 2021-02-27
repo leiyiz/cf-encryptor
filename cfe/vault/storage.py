@@ -117,10 +117,10 @@ class Vault:
     True if an entry with entry_name under that password is succesfully deleted.
     False otherwise.
     '''
-    def delete_data(self, entry_name):
+    def delete_data(self, entry_name_prefix):
         i = 0
         for entry in self.entries:
-            if entry.get_name() == entry_name:
+            if entry.get_name().startswith(entry_name_prefix):
                 break
             else:
                 i += 1
