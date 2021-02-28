@@ -150,7 +150,6 @@ def delete(filename):
     data = entry.get_name().split()
     nickname = data[0].strip()
     remote_name = data[1].strip()
-
     # Delete the file
     try:
         drive_api.func.file_delete(remote_name + ".enc", ['.cfe'])
@@ -158,10 +157,12 @@ def delete(filename):
         logging.error(f"Could not find {nickname}")
         return
 
-    if not v.delete_data(filename + " "):
+    success = v.delete_data(filename)
+    if not success:
         logging.error(f"Could not find {nickname}")
 
     logging.info(f"Successfully deleted {filename}")
+    
 
 cli.add_command(init)
 cli.add_command(add)
