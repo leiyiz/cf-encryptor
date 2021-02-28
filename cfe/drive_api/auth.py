@@ -12,9 +12,9 @@ def drive_login() -> GoogleAuth:
     cwd = change_dir()  # temp solution until we know what will be the working directory
 
     gauth = GoogleAuth()
-    gauth.LoadCredentials()
-    if gauth.access_token_expired:
-        gauth.LocalWebserverAuth()
+    # gauth.LoadCredentials()
+    # if gauth.access_token_expired:
+    gauth.LocalWebserverAuth()
 
     os.chdir(cwd)
 
