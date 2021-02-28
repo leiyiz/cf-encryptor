@@ -84,6 +84,24 @@ def create_folder(folder_path: List[str]) -> str:
     drive = _drive_gen()
     return _create_or_find_folder(folder_path, drive)
 
+def file_delete(file_name:str, folder_path: List[str]):
+    """
+    delete a file if it exists, raise exception if file not found
+    :param file_name: name of the file to be deleted
+    :param folder_path: a list of strings representing the path from root (exclusive)
+                        to a gDrive folder containingsource file (inclusive) on the drive
+    """   
+    drive = _drive_gen()
+    deleted = False
+    folder_id, files = _list_file(folder_path, drive)
+    for file in files:
+        if file['title'] == file_name:
+            file.Trash()
+            deleted = True
+    if not deleted:
+        raise FileNotFoundError(f"file {file_name} is not found under /{'/'.join(folder_path)}")
+
+
 
 # util?
 

@@ -117,17 +117,15 @@ class Vault:
     True if an entry with entry_name under that password is succesfully deleted.
     False otherwise.
     '''
-    def delete_data(self, entry_name):
+    def delete_data(self, entry_name_prefix):
         i = 0
         for entry in self.entries:
-            if entry.get_name() == entry_name:
-                break
+            if entry.get_name().startswith(entry_name_prefix):
+                self.entries.pop(i)
+                self._on_save()
+                return True
             else:
                 i += 1
-        if i < len(self.entries):
-            self.entries.pop(i)
-            return True
-
         return False
 
         
@@ -171,7 +169,6 @@ class Vault:
         
 
         
-
 if __name__ == "__main__":
     print("Toy Example")
     entry_keys = []
@@ -179,5 +176,5 @@ if __name__ == "__main__":
     sample_vault = Vault("password123")
     sample_vault.create_data("arkasfile.txt")
     sample_entry = sample_vault.get_data("arkasfile.txt")
-    print(sample_entry.get_key())
+    sample_vault.delete_data("arkasfile.txt")
     
