@@ -133,11 +133,43 @@ def list():
     tmp = sorted(tmp)
     cmd.Cmd().columnize(tmp, displaywidth=80)
 
+@click.command()
+@click.argument("filename")
+def delete(filename):
+
+    # Get the file ID
+    password = getpass(prompt="Enter password for encryption:")
+    v = vault.Vault(password)
+    entry = v.get_data(filename + " ")
+
+    if entry is None:
+        logging.error(f"No metadata found on {filename}")
+        return
+
+    key = entry.get_key()
+    data = entry.get_name().split()
+    nickname = data[0].strip()
+    remote_name = data[1].strip()
+    # Delete the file
+    try:
+        drive_api.func.file_delete(remote_name + ".enc", ['.cfe'])
+    except:
+        logging.error(f"Could not find {nickname}")
+        return
+
+    success = v.delete_data(filename)
+    if not success:
+        logging.error(f"Could not find {nickname}")
+
+    logging.info(f"Successfully deleted {filename}")
+    
+
 cli.add_command(init)
 cli.add_command(add)
 cli.add_command(download)
 cli.add_command(upload)
 cli.add_command(list)
+cli.add_command(delete)
 
 if __name__ == '__main__':
     cli()
