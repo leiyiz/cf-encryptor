@@ -58,9 +58,18 @@ def upload(src, dst):
     if content is None:
         logging.error(f"Error: Could not find file {src}")
         return
-    
-    # Create a vault entries
-    password = getpass(prompt="Enter password for encryption:")
+
+    password_created = False
+    while not password_created:    
+        # Create a vault entries
+        password = getpass(prompt="Enter password for encryption:")
+        retyped_password = getpass(prompt="Confirm your password:")
+
+        password_created = password == retyped_password
+
+        if not password_created:
+            logging.warning('Passwords do not match. Please try again.\n')
+
     v = vault.Vault(password)
 
     if v.get_data(f"{dst} ") is not None:
