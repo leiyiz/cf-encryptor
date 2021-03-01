@@ -8,6 +8,8 @@ import vault.storage as vault
 from getpass import getpass
 from paths import is_path_exists_or_creatable
 
+gigabyte_size = 1073741824
+
 @click.group()
 def cli():
     """
@@ -69,6 +71,11 @@ def upload(src, dst):
 
     if content is None:
         logging.error(f"Error: Could not find file {src}")
+        return
+
+    # If it's a file, make sure that the file is not too large
+    if os.stat(src).st_size >= gigabyte_size:
+        logging.error(f"file exceeds 1GiB: {src}")
         return
 
     password_created = False
