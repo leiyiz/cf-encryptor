@@ -10,10 +10,16 @@ from paths import is_path_exists_or_creatable
 
 @click.group()
 def cli():
+    """
+    Instantiates the CLI application.
+    """
     pass
 
 @click.command()
 def init():
+    """
+    Initializes a CFE vault.
+    """
     # Create a folder where the CFE metadata will be stored
     if os.path.exists('vault/cfe_vault.dat'):
         os.utime('vault/cfe_vault.dat', None)
@@ -25,6 +31,9 @@ def init():
 @click.argument('add_type')
 @click.argument('name')
 def add(add_type, name):
+    """
+    Given a type of entity and a label of the entity, adds the entity with the label to the CFE application.
+    """
     # Check if they are trying to add a provider
     # TODO: add login by name
     if add_type == "provider":
@@ -40,6 +49,9 @@ def add(add_type, name):
 @click.argument('src')
 @click.argument('dst')
 def upload(src, dst):
+    """
+    Uploads a local file at src at the given alias destination.
+    """
     # TODO: Validate if the provider exists
     if not is_path_exists_or_creatable(src):
         logging.error(f"invalid path: {src}")
@@ -98,6 +110,9 @@ def upload(src, dst):
 @click.argument('src')
 @click.argument('dst')
 def download(src, dst):
+    """
+    Downloads the file at src with and saves it at the local location at dst.
+    """
     # Validate file paths
     if not is_path_exists_or_creatable(dst):
         logging.error(f"invalid path: {dst}")
@@ -151,6 +166,9 @@ def download(src, dst):
 
 @click.command()
 def list():
+    """
+    Lists all the files associated with a particular password.
+    """
     # Prompt the user for a password
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
@@ -166,6 +184,9 @@ def list():
 @click.command()
 @click.argument("filename")
 def delete(filename):
+    """
+    Deletes a file in the vault with the given password.
+    """
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
