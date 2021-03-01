@@ -2,6 +2,7 @@ import uuid
 import errno, os, sys, cmd
 import click, logging
 import drive_api
+import tqdm
 import vault.crypto as crypto
 import vault.storage as vault
 from getpass import getpass
@@ -9,10 +10,16 @@ from paths import is_path_exists_or_creatable
 
 @click.group()
 def cli():
+    """
+    Instantiates the CLI application.
+    """
     pass
 
 @click.command()
 def init():
+    """
+    Initializes a CFE vault.
+    """
     # Create a folder where the CFE metadata will be stored
     if os.path.exists('vault/cfe_vault.dat'):
         os.utime('vault/cfe_vault.dat', None)
@@ -23,7 +30,10 @@ def init():
 @click.command()
 @click.argument('add_type')
 @click.argument('name')
-def add (add_type, name):
+def add(add_type, name):
+    """
+    Given a type of entity and a label of the entity, adds the entity with the label to the CFE application.
+    """
     # Check if they are trying to add a provider
     # TODO: add login by name
     if add_type == "provider":
@@ -39,6 +49,9 @@ def add (add_type, name):
 @click.argument('src')
 @click.argument('dst')
 def upload(src, dst):
+    """
+    Uploads a local file at src at the given alias destination.
+    """
     # TODO: Validate if the provider exists
     if not is_path_exists_or_creatable(src):
         logging.error(f"invalid path: {src}")
@@ -57,30 +70,49 @@ def upload(src, dst):
     if content is None:
         logging.error(f"Error: Could not find file {src}")
         return
-    
-    # Create a vault entrys
-    password = getpass(prompt="Enter password for encryption:")
+
+    password_created = False
+    while not password_created:    
+        # Create a vault entries
+        password = getpass(prompt="Enter password for encryption:")
+        retyped_password = getpass(prompt="Confirm your password:")
+
+        password_created = password == retyped_password
+
+        if not password_created:
+            logging.warning('Passwords do not match. Please try again.\n')
+
     v = vault.Vault(password)
 
     if v.get_data(f"{dst} ") is not None:
         logging.error(f"Already an entry for {dst}")
         return
-    
-    guid = str(uuid.uuid4())
-    entry = v.create_data(f"{dst} {guid}")
+        
+    with tqdm.tqdm(total=100) as progress_bar:
+        guid = str(uuid.uuid4())
+        entry = v.create_data(f"{dst} {guid}")
 
-    # Encrypt the data
-    cipher = crypto.encrypt(entry.entry_key, content)
+        progress_bar.update(33) # Increment progress bar by 33%
 
-    # Upload it to the cloud
-    drive_api.func.file_upload(guid + ".enc", cipher.decode(), ['.cfe'])
-    logging.info(f"Successfully uploaded file as {guid}.enc")
+        # Encrypt the data
+        cipher = crypto.encrypt(entry.entry_key, content)
+
+        progress_bar.update(34) # Increment progress bar by 34%
+
+        # Upload it to the cloud
+        drive_api.func.file_upload(guid + ".enc", cipher.decode(), ['.cfe'])
+        logging.info(f"Successfully uploaded file as {guid}.enc")
+        
+        progress_bar.update(33) # Increment progress bar by 33%
 
 
 @click.command()
 @click.argument('src')
 @click.argument('dst')
 def download(src, dst):
+    """
+    Downloads the file at src with and saves it at the local location at dst.
+    """
     # Validate file paths
     if not is_path_exists_or_creatable(dst):
         logging.error(f"invalid path: {dst}")
@@ -97,36 +129,46 @@ def download(src, dst):
     v = vault.Vault(password)
     entry = v.get_data(src + " ")
 
-    if entry is None:
-        logging.error(f"No metdata found on {src}")
-        return
+    with tqdm.tqdm(total=100) as progress_bar:
+        if entry is None:
+            logging.error(f"No metdata found on {src}")
+            return
+        
+        progress_bar.update(33) # Increment progress bar by 33%
 
-    key = entry.get_key()
-    data = entry.get_name().split()
-    nickname = data[0].strip()
-    remote_name = data[1].strip()
+        key = entry.get_key()
+        data = entry.get_name().split()
+        nickname = data[0].strip()
+        remote_name = data[1].strip()
 
-    # Download the file
-    cipher = None
-    try:
-        cipher = drive_api.func.file_download(remote_name + ".enc", ['.cfe'], dst)
-    except:
-        logging.error(f"Could not find {nickname}")
-        return
+        # Download the file
+        cipher = None
+        try:
+            cipher = drive_api.func.file_download(remote_name + ".enc", ['.cfe'], dst)
+        except:
+            logging.error(f"Could not find {nickname}")
+            return
 
-    if cipher is None:
-        logging.error(f"Could not find {nickname}")
-        return
+        if cipher is None:
+            logging.error(f"Could not find {nickname}")
+            return
 
-    # Decrypt the file and write to dst
-    plaintext = crypto.decrypt(key, cipher)
-    with open(dst, "wb") as f:
-        f.write(plaintext)
+        progress_bar.update(34) # Increment progress bar by 34%
 
-    logging.info(f"Successfully downloaded {dst}")
+        # Decrypt the file and write to dst
+        plaintext = crypto.decrypt(key, cipher)
+        with open(dst, "wb") as f:
+            f.write(plaintext)
+
+        logging.info(f"Successfully downloaded {dst}")
+        
+        progress_bar.update(33) # Increment progress bar by 33%
 
 @click.command()
 def list():
+    """
+    Lists all the files associated with a particular password.
+    """
     # Prompt the user for a password
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
@@ -142,7 +184,9 @@ def list():
 @click.command()
 @click.argument("filename")
 def delete(filename):
-
+    """
+    Deletes a file in the vault with the given password.
+    """
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
@@ -152,22 +196,27 @@ def delete(filename):
         logging.error(f"No metadata found on {filename}")
         return
 
-    key = entry.get_key()
-    data = entry.get_name().split()
-    nickname = data[0].strip()
-    remote_name = data[1].strip()
-    # Delete the file
-    try:
-        drive_api.func.file_delete(remote_name + ".enc", ['.cfe'])
-    except:
-        logging.error(f"Could not find {nickname}")
-        return
+    with tqdm.tqdm(total=100) as progress_bar:
+        key = entry.get_key()
+        data = entry.get_name().split()
+        nickname = data[0].strip()
+        remote_name = data[1].strip()
+        # Delete the file
+        try:
+            drive_api.func.file_delete(remote_name + ".enc", ['.cfe'])
+        except:
+            logging.error(f"Could not find {nickname}")
+            return
 
-    success = v.delete_data(filename)
-    if not success:
-        logging.error(f"Could not find {nickname}")
+        progress_bar.update(50) # Increment progress bar by 50%
 
-    logging.info(f"Successfully deleted {filename}")
+        success = v.delete_data(filename)
+        if not success:
+            logging.error(f"Could not find {nickname}")
+
+        logging.info(f"Successfully deleted {filename}")
+        
+        progress_bar.update(50) # Increment progress bar by 50%
     
 
 cli.add_command(init)
