@@ -7,7 +7,11 @@ __pycache__/
 ### macOS crap ###
 .DS_Store
 
-### Virtual environment folders ###
-venv
+### vault file ###
+vault/
 
+### Virtual Envs ###
+venv/
+
+### Other ###
 token.json
