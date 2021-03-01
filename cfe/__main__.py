@@ -78,17 +78,19 @@ def upload(src, dst):
         logging.error(f"file exceeds 1GiB: {src}")
         return
 
-    password_created = False
-    while not password_created:    
-        # Create a vault entries
+    # Get the password and have the user reconfirm it
+    password = getpass(prompt="Enter password for encryption:")
+    retyped_password = getpass(prompt="Confirm your password:")
+    
+    # If the password and the retyped password don't match, have the user retype the pairs
+    # until they match
+    while password != retyped_password:
+        logging.warning('Passwords do not match. Please try again.\n')
+
         password = getpass(prompt="Enter password for encryption:")
         retyped_password = getpass(prompt="Confirm your password:")
 
-        password_created = password == retyped_password
-
-        if not password_created:
-            logging.warning('Passwords do not match. Please try again.\n')
-
+    # Create a vault entries
     v = vault.Vault(password)
 
     if v.get_data(f"{dst} ") is not None:
