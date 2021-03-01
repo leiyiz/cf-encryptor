@@ -86,6 +86,12 @@ def download(src, dst):
         logging.error(f"invalid path: {dst}")
         return
 
+    # Make sure that we don't overwrite a file
+    if os.path.isfile(dst):
+        print(f"We have detected a file already at '{dst}'")
+        if not click.confirm("Do you want to overwrite this file?", default=False):
+            return
+
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
