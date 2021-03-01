@@ -2,6 +2,7 @@ import uuid
 import errno, os, sys, cmd
 import click, logging
 import drive_api
+import tqdm
 import vault.crypto as crypto
 import vault.storage as vault
 from getpass import getpass
@@ -23,7 +24,7 @@ def init():
 @click.command()
 @click.argument('add_type')
 @click.argument('name')
-def add (add_type, name):
+def add(add_type, name):
     # Check if they are trying to add a provider
     # TODO: add login by name
     if add_type == "provider":
@@ -58,23 +59,30 @@ def upload(src, dst):
         logging.error(f"Error: Could not find file {src}")
         return
     
-    # Create a vault entrys
+    # Create a vault entries
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
 
     if v.get_data(f"{dst} ") is not None:
         logging.error(f"Already an entry for {dst}")
         return
-    
-    guid = str(uuid.uuid4())
-    entry = v.create_data(f"{dst} {guid}")
+        
+    with tqdm.tqdm(total=100) as progress_bar:
+        guid = str(uuid.uuid4())
+        entry = v.create_data(f"{dst} {guid}")
 
-    # Encrypt the data
-    cipher = crypto.encrypt(entry.entry_key, content)
+        progress_bar.update(33) # Increment progress bar by 33%
 
-    # Upload it to the cloud
-    drive_api.func.file_upload(guid + ".enc", cipher.decode(), ['.cfe'])
-    logging.info(f"Successfully uploaded file as {guid}.enc")
+        # Encrypt the data
+        cipher = crypto.encrypt(entry.entry_key, content)
+
+        progress_bar.update(34) # Increment progress bar by 34%
+
+        # Upload it to the cloud
+        drive_api.func.file_upload(guid + ".enc", cipher.decode(), ['.cfe'])
+        logging.info(f"Successfully uploaded file as {guid}.enc")
+        
+        progress_bar.update(33) # Increment progress bar by 33%
 
 
 @click.command()
@@ -97,33 +105,40 @@ def download(src, dst):
     v = vault.Vault(password)
     entry = v.get_data(src + " ")
 
-    if entry is None:
-        logging.error(f"No metdata found on {src}")
-        return
+    with tqdm.tqdm(total=100) as progress_bar:
+        if entry is None:
+            logging.error(f"No metdata found on {src}")
+            return
+        
+        progress_bar.update(33) # Increment progress bar by 33%
 
-    key = entry.get_key()
-    data = entry.get_name().split()
-    nickname = data[0].strip()
-    remote_name = data[1].strip()
+        key = entry.get_key()
+        data = entry.get_name().split()
+        nickname = data[0].strip()
+        remote_name = data[1].strip()
 
-    # Download the file
-    cipher = None
-    try:
-        cipher = drive_api.func.file_download(remote_name + ".enc", ['.cfe'], dst)
-    except:
-        logging.error(f"Could not find {nickname}")
-        return
+        # Download the file
+        cipher = None
+        try:
+            cipher = drive_api.func.file_download(remote_name + ".enc", ['.cfe'], dst)
+        except:
+            logging.error(f"Could not find {nickname}")
+            return
 
-    if cipher is None:
-        logging.error(f"Could not find {nickname}")
-        return
+        if cipher is None:
+            logging.error(f"Could not find {nickname}")
+            return
 
-    # Decrypt the file and write to dst
-    plaintext = crypto.decrypt(key, cipher)
-    with open(dst, "wb") as f:
-        f.write(plaintext)
+        progress_bar.update(34) # Increment progress bar by 34%
 
-    logging.info(f"Successfully downloaded {dst}")
+        # Decrypt the file and write to dst
+        plaintext = crypto.decrypt(key, cipher)
+        with open(dst, "wb") as f:
+            f.write(plaintext)
+
+        logging.info(f"Successfully downloaded {dst}")
+        
+        progress_bar.update(33) # Increment progress bar by 33%
 
 @click.command()
 def list():
@@ -142,7 +157,6 @@ def list():
 @click.command()
 @click.argument("filename")
 def delete(filename):
-
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
@@ -152,22 +166,27 @@ def delete(filename):
         logging.error(f"No metadata found on {filename}")
         return
 
-    key = entry.get_key()
-    data = entry.get_name().split()
-    nickname = data[0].strip()
-    remote_name = data[1].strip()
-    # Delete the file
-    try:
-        drive_api.func.file_delete(remote_name + ".enc", ['.cfe'])
-    except:
-        logging.error(f"Could not find {nickname}")
-        return
+    with tqdm.tqdm(total=100) as progress_bar:
+        key = entry.get_key()
+        data = entry.get_name().split()
+        nickname = data[0].strip()
+        remote_name = data[1].strip()
+        # Delete the file
+        try:
+            drive_api.func.file_delete(remote_name + ".enc", ['.cfe'])
+        except:
+            logging.error(f"Could not find {nickname}")
+            return
 
-    success = v.delete_data(filename)
-    if not success:
-        logging.error(f"Could not find {nickname}")
+        progress_bar.update(50) # Increment progress bar by 50%
 
-    logging.info(f"Successfully deleted {filename}")
+        success = v.delete_data(filename)
+        if not success:
+            logging.error(f"Could not find {nickname}")
+
+        logging.info(f"Successfully deleted {filename}")
+        
+        progress_bar.update(50) # Increment progress bar by 50%
     
 
 cli.add_command(init)
