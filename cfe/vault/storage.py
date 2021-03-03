@@ -3,6 +3,9 @@ import sys
 
 from vault.crypto import *
 
+VAULT_DIR: str = 'vault'
+VAULT_DAT_NAME: str = 'cfe_vault.dat'
+
 
 # Data structure for an entry in the vault
 class VaultEntry:
@@ -156,7 +159,7 @@ class Vault:
         """
         all_entries = []
         try:
-            with open("vault/cfe_vault.dat", "rb") as f:
+            with open(os.path.join(VAULT_DIR, VAULT_DAT_NAME), 'rb') as f:
                 all_entries = f.readlines()
         except:
             logging.error(f"Couldn't initialize the CFE vault. Did you run 'cfe init'?")

@@ -9,7 +9,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 REVOKE = "https://accounts.google.com/o/oauth2/revoke"
 
 
-def drive_login(drive_name: str = "") -> GoogleAuth:
+def drive_login(drive_name: str = '') -> GoogleAuth:
     cwd = change_dir()  # temp solution until we know what will be the working directory
 
     setting_file = config_exist(drive_name, True)
@@ -21,18 +21,18 @@ def drive_login(drive_name: str = "") -> GoogleAuth:
     return gauth
 
 
-def drive_logout(drive_name: str = "") -> None:
+def drive_logout(drive_name: str = '') -> None:
     cwd = change_dir()
 
     setting_file = config_exist(drive_name, True)
     gauth = GoogleAuth(settings_file=setting_file)
-    cred_file = gauth.settings.get("save_credentials_file")
+    cred_file = gauth.settings.get('save_credentials_file')
     token = os.path.join(DIR_PATH, cred_file)
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore")
+        warnings.filterwarnings('ignore')
         gauth.LoadCredentials()
     if not gauth.access_token_expired:
-        print('logging out from the gDrive...')
+        print("logging out from the gDrive...")
         requests.post(url=REVOKE, params={'token': gauth.credentials.access_token},
                       headers={'Content-type': 'application/x-www-form-urlencoded'})
         os.remove(token)

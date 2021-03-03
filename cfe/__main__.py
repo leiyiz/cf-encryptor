@@ -14,7 +14,8 @@ import vault.crypto as crypto
 import vault.storage as vault
 from paths import is_path_exists_or_creatable
 
-gigabyte_size = 1073741824
+GIGABYTE_SIZE: int = 1073741824
+ROOT_DIR: str = '.cfe'
 
 
 @click.group()
@@ -31,11 +32,12 @@ def init():
     Initializes a CFE vault.
     """
     # Create a folder where the CFE metadata will be stored
-    if os.path.exists('vault/cfe_vault.dat'):
-        os.utime('vault/cfe_vault.dat', None)
+    dat_path: str = os.path.join(vault.VAULT_DIR, vault.VAULT_DAT_NAME)
+    if os.path.exists(dat_path):
+        os.utime(dat_path, None)
     else:
-        os.mkdir('vault')
-        open('vault/cfe_vault.dat', 'a').close()
+        os.mkdir(vault.VAULT_DIR)
+        open(dat_path, 'a').close()
 
 
 @click.command()
@@ -47,9 +49,10 @@ def add(add_type, name):
     """
     # Check if they are trying to add a provider
     # TODO: add login by name
+    # TODO: deprecate this method
     if add_type == "provider":
         auth.drive_login()
-        func.init_folder(".cfe")
+        func.init_folder(ROOT_DIR)
 
         print("Adding", name)
     else:
@@ -57,10 +60,15 @@ def add(add_type, name):
 
 
 @click.command()
+def login():
+    print(func.file_list([ROOT_DIR, 'meta']))
+
+
+@click.command()
 def logout():
     auth.drive_logout()
-    if os.path.exists("vault"):
-        rmtree("vault")
+    if os.path.exists('vault'):
+        rmtree('vault')
     print("You have logged out from cfe")
 
 
@@ -91,7 +99,7 @@ def upload(src, dst):
         return
 
     # If it's a file, make sure that the file is not too large
-    if os.stat(src).st_size >= gigabyte_size:
+    if os.stat(src).st_size >= GIGABYTE_SIZE:
         logging.error(f"file exceeds 1GiB: {src}")
         return
 
@@ -126,7 +134,7 @@ def upload(src, dst):
         progress_bar.update(34)  # Increment progress bar by 34%
 
         # Upload it to the cloud
-        func.file_upload(guid + ".enc", cipher.decode(), ['.cfe'])
+        func.file_upload(guid + ".enc", cipher.decode(), [ROOT_DIR])
         logging.info(f"Successfully uploaded file as {guid}.enc")
 
         progress_bar.update(33)  # Increment progress bar by 33%
@@ -170,7 +178,7 @@ def download(src, dst):
         # Download the file
         cipher = None
         try:
-            cipher = func.file_download(remote_name + ".enc", ['.cfe'])
+            cipher = func.file_download(remote_name + ".enc", [ROOT_DIR])
         except:
             logging.error(f"Could not find {nickname}")
             return
@@ -210,7 +218,7 @@ def list():
 
 
 @click.command()
-@click.argument("filename")
+@click.argument('filename')
 def delete(filename):
     """
     Deletes a file in the vault with the given password.
@@ -231,7 +239,7 @@ def delete(filename):
         remote_name = data[1].strip()
         # Delete the file
         try:
-            func.file_delete(remote_name + ".enc", ['.cfe'])
+            func.file_delete(remote_name + '.enc', [ROOT_DIR])
         except:
             logging.error(f"Could not find {nickname}")
             return
@@ -248,7 +256,8 @@ def delete(filename):
 
 
 cli.add_command(init)
-cli.add_command(add)
+cli.add_command(add)  # TODO: deprecate this command
+cli.add_command(login)
 cli.add_command(logout)
 cli.add_command(download)
 cli.add_command(upload)
