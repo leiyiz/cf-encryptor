@@ -3,12 +3,13 @@ import logging
 import os
 import uuid
 from getpass import getpass
+from shutil import rmtree
 
 import click
 import tqdm
 
-import drive_api.func as func
 import drive_api.auth as auth
+import drive_api.func as func
 import vault.crypto as crypto
 import vault.storage as vault
 from paths import is_path_exists_or_creatable
@@ -53,6 +54,14 @@ def add(add_type, name):
         print("Adding", name)
     else:
         logging.error(f"Error: Adding '{add_type}' is not supported.")
+
+
+@click.command()
+def logout():
+    auth.drive_logout()
+    if os.path.exists("vault"):
+        rmtree("vault")
+    print("You have logged out from cfe")
 
 
 @click.command()
@@ -240,6 +249,7 @@ def delete(filename):
 
 cli.add_command(init)
 cli.add_command(add)
+cli.add_command(logout)
 cli.add_command(download)
 cli.add_command(upload)
 cli.add_command(list)

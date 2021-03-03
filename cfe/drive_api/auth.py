@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import requests
 import yaml
@@ -27,12 +28,14 @@ def drive_logout(drive_name: str = "") -> None:
     gauth = GoogleAuth(settings_file=setting_file)
     cred_file = gauth.settings.get("save_credentials_file")
     token = os.path.join(DIR_PATH, cred_file)
-    gauth.LoadCredentials()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        gauth.LoadCredentials()
     if not gauth.access_token_expired:
         print('logging out from the gDrive...')
         requests.post(url=REVOKE, params={'token': gauth.credentials.access_token},
                       headers={'Content-type': 'application/x-www-form-urlencoded'})
-    os.remove(token)
+        os.remove(token)
 
     os.chdir(cwd)
 
