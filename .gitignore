@@ -14,4 +14,4 @@ vault/
 venv/
 
 ### Other ###
-token.json
+*token.json

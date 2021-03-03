@@ -1,9 +1,8 @@
-import os
 import base64
+import os
+
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 def generate_random_key():
@@ -11,6 +10,7 @@ def generate_random_key():
     Returns a new random cryptographic key
     """
     return Fernet.generate_key()
+
 
 def generate_password_key(password, salt):
     """
@@ -27,9 +27,9 @@ def generate_password_key(password, salt):
     kdf = Scrypt(
         salt=salt,  # Random salt to prevent brute-force
         length=32,  # Output length of bytes
-        n=2**14,    # Computational cost, reccomended value in https://www.tarsnap.com/scrypt/scrypt.pdf
-        r=8,        # Block size
-        p=1,        # Parallelization parameter
+        n=2 ** 14,  # Computational cost, reccomended value in https://www.tarsnap.com/scrypt/scrypt.pdf
+        r=8,  # Block size
+        p=1,  # Parallelization parameter
     )
 
     key = base64.urlsafe_b64encode(kdf.derive(password_bytes))
@@ -84,11 +84,11 @@ if __name__ == "__main__":
     print()
 
     # (3) Decrypt a row entry (password-based key)
-    pb_key = generate_password_key("password123", salt) # Note that salt can be stored in plaintext
+    pb_key = generate_password_key("password123", salt)  # Note that salt can be stored in plaintext
     dec_entry = decrypt(pb_key, enc_entry)
     print("Decrypted Entry:", dec_entry)
 
     # (4) Decrypt a file (random cryptographic key)
-    file_key = dec_entry[7:] # get rid of text
+    file_key = dec_entry[7:]  # get rid of text
     dec_file = decrypt(file_key, enc_file)
     print("Decrypted File:", dec_file)

@@ -1,7 +1,8 @@
-from vault.crypto import *
-import os, sys
-import hashlib
 import logging
+import sys
+
+from vault.crypto import *
+
 
 # Data structure for an entry in the vault
 class VaultEntry:
@@ -24,9 +25,11 @@ class VaultEntry:
         key = generate_password_key(password, self.salt)
         ciphertext = encrypt(key, entry)
         return self.salt + ciphertext
-    
-    ''' Returns true if successfully decrypted and stored, and false otherwise '''
+
     def decrypt_and_store_entry(self, password, entry_ciphertext):
+        """
+        Returns true if successfully decrypted and stored, and false otherwise
+        """
         salt, ciphertext = entry_ciphertext[:16], entry_ciphertext[16:]
         key = generate_password_key(password, salt)
         try:
@@ -43,61 +46,61 @@ class VaultEntry:
         except:
             return False
 
-    
+
 # Primary Vault Class 
 class Vault:
     def __init__(self, password):
         # Dictionary with hash of password: entries
         self.entries = []
         self.other_entries = []
-        self.password =  password
+        self.password = password
         self._on_init()
 
-    ''' 
-    Gets a list of all data entries accessible by a 
-    user passed password in the vault
-    
-    Inputs:
-
-    Returns:
-    a list of all data entries accessible by password
-    '''
     def get_data_list(self):
-        return self.entries
-    
-    ''' 
-    Gets data for a particular entry with the name 
-    entry_name 
-    
-    Inputs:
-    entry_name - a string that represents the name of 
-    entry being queried
+        """
+        Gets a list of all data entries accessible by a
+        user passed password in the vault
 
-    Returns: 
-    data entry with entry_name name and accessible by password. 
-    If data entry with entry_name name does not exist in vault, returns 
-    None.
-    '''
+        Inputs:
+
+        Returns:
+        a list of all data entries accessible by password
+        """
+        return self.entries
+
     def get_data(self, entry_name_prefix):
+        """
+        Gets data for a particular entry with the name
+        entry_name
+
+        Inputs:
+        entry_name - a string that represents the name of
+        entry being queried
+
+        Returns:
+        data entry with entry_name name and accessible by password.
+        If data entry with entry_name name does not exist in vault, returns
+        None.
+        """
         for entry in self.entries:
             if entry.get_name().startswith(entry_name_prefix):
-                return entry    
+                return entry
         return None
 
-    '''
-    Creates a new data entry with the name entry_name 
-
-    Inputs:
-    password - a string that represents a user password
-    entry_name - a string that represents the name of the 
-    entry being created
-
-    Returns:
-    new VaultEntry if vault successfully creates a new entry with that password lock
-    old VaultEntry if entry with name entry_name already exists under password
-    None if error occurs in creation or cannot authenticate query
-    '''
     def create_data(self, entry_name):
+        """
+        Creates a new data entry with the name entry_name
+
+        Inputs:
+        password - a string that represents a user password
+        entry_name - a string that represents the name of the
+        entry being created
+
+        Returns:
+        new VaultEntry if vault successfully creates a new entry with that password lock
+        old VaultEntry if entry with name entry_name already exists under password
+        None if error occurs in creation or cannot authenticate query
+        """
         for entry in self.entries:
             if entry.get_name() == entry_name:
                 return entry
@@ -106,18 +109,17 @@ class Vault:
         self._on_save()
         return new_entry
 
-    
-    '''
-    Deletes a data entry in the vault with name entry_name
-
-    Inputs:
-    entry_name - a string that represents the name of the entry to be deleted
-
-    Returns:
-    True if an entry with entry_name under that password is succesfully deleted.
-    False otherwise.
-    '''
     def delete_data(self, entry_name_prefix):
+        """
+        Deletes a data entry in the vault with name entry_name
+
+        Inputs:
+        entry_name - a string that represents the name of the entry to be deleted
+
+        Returns:
+        True if an entry with entry_name under that password is succesfully deleted.
+        False otherwise.
+        """
         i = 0
         for entry in self.entries:
             if entry.get_name().startswith(entry_name_prefix):
@@ -128,13 +130,13 @@ class Vault:
                 i += 1
         return False
 
-        
-    ''' Called when program exits.
+    def _on_save(self):
+        """
+        Called when program exits.
         Performs the following functionalities:
             - Encrypt entries
             - Save new password hash to entry dictionary to local file
-    '''
-    def _on_save(self):
+        """
         with open("vault/cfe_vault.dat", "wb+") as f:
             for entry in self.entries:
                 entry_ct = entry.encrypt_entry(self.password)
@@ -143,15 +145,15 @@ class Vault:
             for entry_ct in self.other_entries:
                 f.write(entry_ct)
                 f.write(str.encode('\n'))
-            
-        
-    ''' Loaded when vault is initiatlized
+
+    def _on_init(self):
+        """
+        Loaded when vault is initiatlized
         Performs the following functionalities:
             - Load password hash to entry dictionary from local file
             - Unhash all entries
             - Load internal data structures
-    ''' 
-    def _on_init(self):
+        """
         all_entries = []
         try:
             with open("vault/cfe_vault.dat", "rb") as f:
@@ -159,22 +161,19 @@ class Vault:
         except:
             logging.error(f"Couldn't initialize the CFE vault. Did you run 'cfe init'?")
             sys.exit()
-        
+
         for entry_ct in all_entries:
             potential_entry = VaultEntry()
             if potential_entry.decrypt_and_store_entry(self.password, entry_ct):
                 self.entries.append(potential_entry)
             else:
                 self.other_entries.append(entry_ct)
-        
 
-        
+
 if __name__ == "__main__":
     print("Toy Example")
-    entry_keys = []
-    entry_keys.append(generate_random_key())
+    entry_keys = [generate_random_key()]
     sample_vault = Vault("password123")
     sample_vault.create_data("arkasfile.txt")
     sample_entry = sample_vault.get_data("arkasfile.txt")
     sample_vault.delete_data("arkasfile.txt")
-    
