@@ -162,7 +162,7 @@ class Vault:
             with open(os.path.join(VAULT_DIR, VAULT_DAT_NAME), 'rb') as f:
                 all_entries = f.readlines()
         except:
-            logging.error(f"Couldn't initialize the CFE vault. Did you run 'cfe init'?")
+            logging.error(f"Couldn't initialize the CFE vault. Did you run 'cfe login'?")
             sys.exit()
 
         for entry_ct in all_entries:
@@ -171,6 +171,10 @@ class Vault:
                 self.entries.append(potential_entry)
             else:
                 self.other_entries.append(entry_ct)
+
+
+def __get_dat_path() -> str:
+    return os.path.join(VAULT_DIR, VAULT_DAT_NAME)
 
 
 if __name__ == "__main__":

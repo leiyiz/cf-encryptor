@@ -1,4 +1,5 @@
-from typing import List, Tuple
+import os
+from typing import List, Tuple, Optional
 
 from pydrive2.drive import GoogleDrive
 
@@ -24,7 +25,7 @@ def file_list(folder_path: List[str]) -> list:
     return __list_file(folder_path, drive)[1]
 
 
-def file_replace(file_name: str, file_content: str, folder_path: List[str]) -> None:
+def file_replace(file_name: str, file_content: Optional[str], folder_path: List[str]) -> None:
     """
     upload file from local to gDrive, if a file with same "title" already exists, replace that file.
 
@@ -45,14 +46,14 @@ def file_replace(file_name: str, file_content: str, folder_path: List[str]) -> N
     __upload(file_name, file_content, drive, folder_id)
 
 
-def file_upload(file_name: str, file_content: str, folder_path: List[str]) -> None:
+def file_upload(file_name: str, file_content: Optional[str], folder_path: List[str]) -> None:
     drive = __drive_gen()
 
     folder_id = __create_or_find_folder(folder_path, drive)
     __upload(file_name, file_content, drive, folder_id)
 
 
-def file_download(file_name: str, folder_path: List[str]) -> str:
+def file_download(file_name: str, folder_path: List[str]) -> bytes:
     """
 
     :param file_name: name of the file to be downloaded
@@ -72,7 +73,7 @@ def file_download(file_name: str, folder_path: List[str]) -> str:
         raise FileNotFoundError(f"file {file_name} is not found under /{'/'.join(folder_path)}")
 
     file = drive.CreateFile({'id': fid})
-    return file.GetContentString()
+    return file.GetContentIOBuffer().read()
 
 
 def create_folder(folder_path: List[str]) -> str:
@@ -136,7 +137,10 @@ def __drive_gen() -> GoogleDrive:
 
 def __upload(file_name: str, file_content: str, drive: GoogleDrive, parent_id: str) -> None:
     file = drive.CreateFile()
-    file.SetContentString(file_content)
+    if file_content:
+        file.SetContentString(file_content)
+    else:
+        file.SetContentFile(file_name)
     file['title'] = file_name
     file['parents'] = [{'id': parent_id}]
     file.Upload()

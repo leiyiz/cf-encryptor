@@ -27,17 +27,18 @@ def cli():
 
 
 @click.command()
-def init():
+def login():
     """
-    Initializes a CFE vault.
+    Login to gDrive and Initializes a CFE vault.
     """
     # Create a folder where the CFE metadata will be stored
-    dat_path: str = os.path.join(vault.VAULT_DIR, vault.VAULT_DAT_NAME)
+    dat_path: str = vault.__get_dat_path()
     if os.path.exists(dat_path):
         os.utime(dat_path, None)
     else:
         os.mkdir(vault.VAULT_DIR)
         open(dat_path, 'a').close()
+    __download_vault_if_exist()
 
 
 @click.command()
@@ -60,16 +61,21 @@ def add(add_type, name):
 
 
 @click.command()
-def login():
-    print(func.file_list([ROOT_DIR, 'meta']))
-
-
-@click.command()
 def logout():
     auth.drive_logout()
     if os.path.exists('vault'):
         rmtree('vault')
     print("You have logged out from cfe")
+
+
+def __download_vault_if_exist():
+    try:
+        dat_path = vault.__get_dat_path()
+        content: bytes = func.file_download(dat_path, [ROOT_DIR, 'meta'])
+        with open(dat_path, 'wb') as file:
+            file.write(content)
+    except FileNotFoundError:
+        return
 
 
 @click.command()
@@ -84,8 +90,9 @@ def upload(src, dst):
         logging.error(f"invalid path: {src}")
         return
 
+    __download_vault_if_exist()
+
     # Read the contents of the file
-    content = None
     try:
         with open(src, 'rb') as f:
             content = f.read()
@@ -135,6 +142,7 @@ def upload(src, dst):
 
         # Upload it to the cloud
         func.file_upload(guid + ".enc", cipher.decode(), [ROOT_DIR])
+        func.file_replace(vault.__get_dat_path(), None, [ROOT_DIR, 'meta'])
         logging.info(f"Successfully uploaded file as {guid}.enc")
 
         progress_bar.update(33)  # Increment progress bar by 33%
@@ -151,6 +159,8 @@ def download(src, dst):
     if not is_path_exists_or_creatable(dst):
         logging.error(f"invalid path: {dst}")
         return
+
+    __download_vault_if_exist()
 
     # Make sure that we don't overwrite a file
     if os.path.isfile(dst):
@@ -223,6 +233,7 @@ def delete(filename):
     """
     Deletes a file in the vault with the given password.
     """
+    __download_vault_if_exist()
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
@@ -241,7 +252,7 @@ def delete(filename):
         try:
             func.file_delete(remote_name + '.enc', [ROOT_DIR])
         except:
-            logging.error(f"Could not find {nickname}")
+            logging.error(f"Could not find {nickname} on cloud")
             return
 
         progress_bar.update(50)  # Increment progress bar by 50%
@@ -249,13 +260,12 @@ def delete(filename):
         success = v.delete_data(filename)
         if not success:
             logging.error(f"Could not find {nickname}")
-
-        logging.info(f"Successfully deleted {filename}")
+        func.file_replace(vault.__get_dat_path(), None, [ROOT_DIR, 'meta'])
 
         progress_bar.update(50)  # Increment progress bar by 50%
+        logging.info(f"Successfully deleted {filename}")
 
 
-cli.add_command(init)
 cli.add_command(add)  # TODO: deprecate this command
 cli.add_command(login)
 cli.add_command(logout)
