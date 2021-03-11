@@ -6,6 +6,18 @@ Leiyi Zhang
 Soham Pardeshi
 
 # Getting Started
+Welcome to Cloud File Encryptors (CFE)! Below we have some information that you may find useful for our application. Feel free to click on the links below to navigate through the information:
+- [Important Vocabulary](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#important-vocabulary)
+- [Tutorial](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#tutorial)
+  - [Installation](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#installation)
+  - [Creating a CFE Vault](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#creating-a-cfe-vault)
+  - [Connecting to Your Google Drive Account](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#connecting-to-your-google-drive-account)
+  - [Uploading Files](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#uploading-files)
+  - [Viewing Uploaded Files](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#viewing-uploaded-files)
+  - [Downloading Files](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#downloading-files)
+  - [Deleting Files](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#deleting-files)
+  - [Final Thoughts](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#final-thoughts)
+- [Download Cloud File Encryptors](https://gitlab.cs.washington.edu/leiyiz/cloud-file-encryptor/-/tree/tutorial#download-cloud-file-encryptors)
 
 ## Important Vocabulary
 - *Encryption*: Encryption is a process where computers take data, such as text or files, and scrambles it into another format that is completely uninterpretable to humans. This keeps your information safe from cyberattackers. For example, if we have the text "Hello world", it can be transformed into "gSCsxf+rLqjrr66BiETc5g==". 
@@ -49,7 +61,7 @@ cfe add provider your-provider-nickname
 ```
 You will be prompted to log into Google Drive.
 
-### Uploading files
+### Uploading Files
 Now, let's get some data to encrypted on your Google Drive. Let's upload our first file! You'll need collect the following information:
 - The file path of the file you'd like to upload
 - The provider nickname (from step 4)
