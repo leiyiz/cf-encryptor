@@ -21,31 +21,36 @@ Before we start, please ensure you are familiar with the following topics:
   - [Tutorial for Windows users](https://www.sony.com/electronics/support/articles/00015251)
   - [Tutorial for MacOS usrs](https://macpaw.com/how-to/get-file-path-mac)
 
-1. Ensure that you have Python 3.7 installed. If you don't, you can download Python and its package manager, `pip`, [here](https://www.python.org/downloads/).
+### Installation
+Ensure that you have Python 3.7 installed. If you don't, you can download Python and its package manager, `pip`, [here](https://www.python.org/downloads/).
 
-2. Now, we can download the application. To do this, we should open our terminal and run the following command:
+Now, we can download the application. To do this, we should open our terminal and run the following command:
 ```
 pip install cfe
 ```
 
-3. Next, create a shortcut to make CFE easier to use.
+Next, create a shortcut to make CFE easier to use.
 ```
 export cfe=python cfe
 ```
 We're ready to use CFE!
 
-4. After this, you're ready to use our application. Before we begin uploading or downloading files, we need to set up our vault. This will contain special metadata that CFE will use to securely encrypt and decrypt files. We do this by running the following command:
+
+### Creating a CFE Vault
+After this, you're ready to use our application. Before we begin uploading or downloading files, we need to set up our vault. This will contain special metadata that CFE will use to securely encrypt and decrypt files. We do this by running the following command:
 ```
 cfe init
 ```
 
-5. Now, we need to add your Google Account to CFE so that CFE can upload and download data to it later. We'll also need to give your account a nickname so that we can reference it later. To do this, we run:
+### Connecting to Your Google Drive Account
+Now, we need to add your Google Account to CFE so that CFE can upload and download data to it later. We'll also need to give your account a nickname so that we can reference it later. To do this, we run:
 ```
 cfe add provider your-provider-nickname
 ```
 You will be prompted to log into Google Drive.
 
-6. Now, let's get some data to encrypted on your Google Drive. Let's upload our first file! You'll need collect the following information:
+### Uploading files
+Now, let's get some data to encrypted on your Google Drive. Let's upload our first file! You'll need collect the following information:
 - The file path of the file you'd like to upload
 - The provider nickname (from step 4)
 - A nickname for the file on your Drive (you can make this up!)
@@ -57,7 +62,15 @@ cfe upload your-file-path your-provider-nickname/your-file-nickname
 ```
 You will be prompted to enter your password for the file. You can create groups of files by encrypting them with the same password. You may be prompted to log into Google Drive.
 
-7. Next, let's download the file back to our computer. You'll need the following information:
+### Viewing Uploaded Files
+Now, let's verify what files we have in our vault with the password we just used (from step 5). We can do this by typing:
+```
+cfe list
+```
+You will be prompted to enter your password. You should see the file you just uploaded listed.
+
+### Downloading Files
+Next, let's download the file back to our computer. You'll need the following information:
 - The nickname for the file on your Drive (from step 5)
 - The provider nickname (from step 4)
 - The file path you'd like to download the file (remember to give your file a name and extension, if applicable)
@@ -70,13 +83,8 @@ cfe download your-provider-nickname/your-file-nickname your-file-path
 You will be prompted to enter your password for the file before decrypting it. You may be prompted to log into Google Drive.
 
 
-8. Now, let's verify what files we have in our vault with the password we just used (from step 5). We can do this by typing:
-```
-cfe list
-```
-You will be prompted to enter your password. You should see the file you just uploaded listed.
-
-9. Finally, we can delete the file we just uploaded on our local computer as well as Google Drive. You'll need the following information:
+### Deleting Files
+Finally, we can delete the file we just uploaded on our local computer as well as Google Drive. You'll need the following information:
 - The file path of the file you'd like to delete (from step 6)
 - The password associated with the file (from step 5)
 
@@ -86,7 +94,8 @@ cfe delete your-file-path
 ```
 You will be prompted to enter the password for the file. You may be prompted to log into Google Drive.
 
-10. Congrats, you're done! Now, you know the basics of our tool!
+### Final Thoughts
+Congrats, you're done! Now, you know the basics of our tool.
 
 ## Download Cloud File Encryptors
 This project requires Python >= 3.7.
