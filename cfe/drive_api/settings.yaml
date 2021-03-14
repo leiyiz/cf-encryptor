@@ -5,4 +5,4 @@ save_credentials_backend: file
 save_credentials_file: token.json
 
 oauth_scope:
-  - https://www.googleapis.com/auth/drive
+  - https://www.googleapis.com/auth/drive.file
