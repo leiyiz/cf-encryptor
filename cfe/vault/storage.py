@@ -4,20 +4,22 @@ import hashlib
 import logging
 
 # Data structure for an entry in the vault
+
 class VaultEntry:
     def __init__(self, entryname="", key=None):
-        self.name = entryname
+        self.name = entryname # Name of entry in the vault
         if key is None:
+            # Cryptographic key for this entry is generated if not passed in
             key = generate_random_key()
-        self.entry_key = key
-        self.salt = os.urandom(16)
-
+        self.entry_key = key # Cryptographic key for this entry
+        self.salt = os.urandom(16) # Salt used for secure password based entry storage
+    # Getter method for entry key
     def get_key(self):
         return self.entry_key
-
+    # Getter method for entry name
     def get_name(self):
         return self.name
-
+    # Encrypts this vault entry using the passed password and internally generated sault
     def encrypt_entry(self, password):
         key = self.entry_key.decode()
         entry = f"cfe_check,{self.name},{key}"
@@ -25,7 +27,10 @@ class VaultEntry:
         ciphertext = encrypt(key, entry)
         return self.salt + ciphertext
     
-    ''' Returns true if successfully decrypted and stored, and false otherwise '''
+    ''' Decrypts a user passed vault entry ciphertext to populate this 
+    entry using the user passed password. 
+    
+    Returns true if successfully decrypted and stored, and false otherwise '''
     def decrypt_and_store_entry(self, password, entry_ciphertext):
         salt, ciphertext = entry_ciphertext[:16], entry_ciphertext[16:]
         key = generate_password_key(password, salt)
@@ -47,10 +52,9 @@ class VaultEntry:
 # Primary Vault Class 
 class Vault:
     def __init__(self, password):
-        # Dictionary with hash of password: entries
         self.entries = []
         self.other_entries = []
-        self.password =  password
+        self.password = password
         self._on_init()
 
     ''' 
@@ -166,8 +170,24 @@ class Vault:
                 self.entries.append(potential_entry)
             else:
                 self.other_entries.append(entry_ct)
-        
 
+    ''' Sync vault's entries with a user passed set of entry names 
+
+        Input: Accepts a list of entry names (remote names of files only) as input
+
+        Adjusts vault's internal entries to reflect the entries passed 
+        in by user, removing any that do not exist in user passed list, but 
+        NOT adding new entries that exist in user passed list. 
+
+    '''
+    def sync_entries(self, remote_entry_names):
+        refreshed_entries = []
+        for entry in self.entries:
+            entry_remote_name = entry.get_name().split()[1].strip()
+            if entry_remote_name in remote_entry_names:
+                refreshed_entries.append(entry)
+        self.entries = refreshed_entries
+        self._on_save()
         
 if __name__ == "__main__":
     print("Toy Example")

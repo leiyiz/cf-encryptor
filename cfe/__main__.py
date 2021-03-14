@@ -5,10 +5,21 @@ import drive_api
 import tqdm
 import vault.crypto as crypto
 import vault.storage as vault
+import time
 from getpass import getpass
 from paths import is_path_exists_or_creatable
 
 gigabyte_size = 1073741824
+
+# Sync with remote drive prior to functionality
+def sync_files(vault):
+    # Sleep for a small bit in case user is quickly chaining commands
+    time.sleep(0.1)
+    print("Syncing...")
+    file_remote_names = []
+    for file_obj in drive_api.file_list(['.cfe']):
+        file_remote_names.append(file_obj['title'].strip(".enc"))
+    vault.sync_entries(file_remote_names)
 
 @click.group()
 def cli():
@@ -92,7 +103,7 @@ def upload(src, dst):
 
     # Create a vault entries
     v = vault.Vault(password)
-
+    sync_files(v)
     if v.get_data(f"{dst} ") is not None:
         logging.error(f"Already an entry for {dst}")
         return
@@ -136,6 +147,7 @@ def download(src, dst):
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
+    sync_files(v)
     entry = v.get_data(src + " ")
 
     with tqdm.tqdm(total=100) as progress_bar:
@@ -182,6 +194,9 @@ def list():
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
 
+    sync_files(v)
+
+    # Continue
     tmp = []
     for entry in v.get_data_list():
         data = entry.get_name().split()
@@ -193,16 +208,13 @@ def list():
 @click.command()
 @click.argument("filename")
 def delete(filename):
-<<<<<<< HEAD
-
-=======
     """
     Deletes a file in the vault with the given password.
     """
->>>>>>> 15643eaaf6a08d33a4ccff458846be01613644e1
     # Get the file ID
     password = getpass(prompt="Enter password for encryption:")
     v = vault.Vault(password)
+    sync_files(v)
     entry = v.get_data(filename + " ")
 
     if entry is None:
