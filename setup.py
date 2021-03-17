@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cf-encryptor",
-    version="0.1.2",
+    version="0.1.8",
     include_package_data=True,
     author="Arka Bhattacharya, Jenny Liang, Soham Pardeshi, Leiyi Zhang",
     author_email="leiyiz@cs.washington.edu",
@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'cfe=cfe.__main__'
+            'cfe=cfe.__main__:cli'
         ]
     },
     classifiers=[
