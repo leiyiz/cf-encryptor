@@ -3,11 +3,12 @@ from setuptools import setup
 # Extra dependecies to run tests
 
 setup(
-    name="enDrive",
+    name="cf-encryptor",
     version="0.1.0",
+    include_package_data=True,
     author="Arka Bhattacharya, Jenny Liang, Soham Pardeshi, Leiyi Zhang",
     author_email="leiyiz@cs.washington.edu",
-    packages=["cf-encryptor"],
+    packages=["cfe"],
     url="",
     license="MIT License",
     description="encrypted upload of local file to gDrive",
@@ -21,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'cfe=cfe.__main__'
+            'cfe=cfe.__main__:main'
         ]
     },
     classifiers=[
