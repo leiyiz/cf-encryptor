@@ -1,15 +1,15 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Extra dependecies to run tests
 
 setup(
     name="cf-encryptor",
-    version="0.1.0",
+    version="0.1.1",
     include_package_data=True,
     author="Arka Bhattacharya, Jenny Liang, Soham Pardeshi, Leiyi Zhang",
     author_email="leiyiz@cs.washington.edu",
-    packages=["cfe"],
-    url="",
+    packages=find_packages(),
+    url="https://github.com/leiyiz/cf-encryptor",
     license="MIT License",
     description="encrypted upload of local file to gDrive",
     # long_description=open("README.rst").read(),
