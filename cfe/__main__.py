@@ -1,12 +1,12 @@
 import uuid
 import errno, os, sys, cmd
 import click, logging
-import drive_api
+import cfe.drive_api as drive_api
 import tqdm
-import vault.crypto as crypto
-import vault.storage as vault
+import cfe.vault.crypto as crypto
+import cfe.vault.storage as vault
 from getpass import getpass
-from paths import is_path_exists_or_creatable
+from cfe.paths import is_path_exists_or_creatable
 
 gigabyte_size = 1073741824
 
@@ -81,7 +81,7 @@ def upload(src, dst):
     # Get the password and have the user reconfirm it
     password = getpass(prompt="Enter password for encryption:")
     retyped_password = getpass(prompt="Confirm your password:")
-    
+
     # If the password and the retyped password don't match, have the user retype the pairs
     # until they match
     while password != retyped_password:
@@ -96,7 +96,7 @@ def upload(src, dst):
     if v.get_data(f"{dst} ") is not None:
         logging.error(f"Already an entry for {dst}")
         return
-        
+
     with tqdm.tqdm(total=100) as progress_bar:
         guid = str(uuid.uuid4())
         entry = v.create_data(f"{dst} {guid}")
@@ -111,7 +111,7 @@ def upload(src, dst):
         # Upload it to the cloud
         drive_api.func.file_upload(guid + ".enc", cipher.decode(), ['.cfe'])
         logging.info(f"Successfully uploaded file as {guid}.enc")
-        
+
         progress_bar.update(33) # Increment progress bar by 33%
 
 
@@ -142,7 +142,7 @@ def download(src, dst):
         if entry is None:
             logging.error(f"No metdata found on {src}")
             return
-        
+
         progress_bar.update(33) # Increment progress bar by 33%
 
         key = entry.get_key()
@@ -170,7 +170,7 @@ def download(src, dst):
             f.write(plaintext)
 
         logging.info(f"Successfully downloaded {dst}")
-        
+
         progress_bar.update(33) # Increment progress bar by 33%
 
 @click.command()
@@ -186,7 +186,7 @@ def list():
     for entry in v.get_data_list():
         data = entry.get_name().split()
         tmp.append(data[0].strip())
-    
+
     tmp = sorted(tmp)
     cmd.Cmd().columnize(tmp, displaywidth=80)
 
@@ -224,9 +224,9 @@ def delete(filename):
             logging.error(f"Could not find {nickname}")
 
         logging.info(f"Successfully deleted {filename}")
-        
+
         progress_bar.update(50) # Increment progress bar by 50%
-    
+
 
 cli.add_command(init)
 cli.add_command(add)

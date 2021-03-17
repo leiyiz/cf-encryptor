@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cf-encryptor",
-    version="0.1.1",
+    version="0.1.2",
     include_package_data=True,
     author="Arka Bhattacharya, Jenny Liang, Soham Pardeshi, Leiyi Zhang",
     author_email="leiyiz@cs.washington.edu",
@@ -15,14 +15,14 @@ setup(
     # long_description=open("README.rst").read(),
     install_requires=[
         "cryptography",
-        "click ~= 7.1.2",
-        "pydrive2~=1.8.0",
-        "requests~=2.21.0",
-        "tqdm ~= 4.56.0"
+        "click >= 7.1.2",
+        "pydrive2>=1.8.0",
+        "requests>=2.21.0",
+        "tqdm>=4.56.0"
     ],
     entry_points={
         'console_scripts': [
-            'cfe=cfe.__main__:main'
+            'cfe=cfe.__main__'
         ]
     },
     classifiers=[

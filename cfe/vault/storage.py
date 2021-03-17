@@ -1,4 +1,4 @@
-from vault.crypto import *
+from .crypto import *
 import os, sys
 import hashlib
 import logging
